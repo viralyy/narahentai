@@ -22,7 +22,7 @@ export async function onRequestPost({ request, env }) {
     const bodyText = await request.text();
     let body;
     try { body = JSON.parse(bodyText); }
-    catch { return new Response("Invalid JSON body: " + bodyText, { status: 400 }); }
+    catch { return new Response("Invalid JSON", { status: 400 }); }
 
     const {
       id = null,
@@ -34,9 +34,7 @@ export async function onRequestPost({ request, env }) {
       published = false
     } = body;
 
-    if (!title || !video_url) {
-      return new Response("title & video_url wajib", { status: 400 });
-    }
+    if (!title || !video_url) return new Response("title & video_url wajib", { status: 400 });
 
     const finalSlug = slugify(slug || title);
     if (!finalSlug) return new Response("slug invalid", { status: 400 });
