@@ -4,47 +4,78 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Player</title>
+  <meta name="theme-color" content="#000000" />
   <style>
-    body{margin:0;font-family:system-ui;background:#000;color:#fff}
-    .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
-    .player{width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#111}
-    video{width:100%;height:100%;background:#000}
-    a{color:#8ab4ff}
+    :root{--bg:#050508;--txt:#f3f4ff;--mut:#a6a7c2;--bd:1px solid rgba(255,255,255,.10);--br:18px}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu;background:var(--bg);color:var(--txt)}
+    .wrap{max-width:1180px;margin:20px auto;padding:0 16px}
+    a{color:#8ab4ff;text-decoration:none}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .title{margin:12px 0 6px;font-size:22px;letter-spacing:.2px}
+    .desc{color:var(--mut);margin:0 0 14px;line-height:1.55}
+    .player{width:100%;aspect-ratio:16/9;border-radius:var(--br);overflow:hidden;border:var(--bd);background:#0c0c14}
+    video{width:100%;height:100%;background:#000;display:block}
+    .err{margin-top:12px;color:#ff8a8a}
+    .meta{color:var(--mut);font-size:12px;margin-top:10px}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <a href="/">← Kembali</a>
-    <h1 id="title" style="margin:12px 0 8px">Loading...</h1>
-    <div class="player">
-      <video id="vid" controls playsinline></video>
+    <div class="top">
+      <a href="/">← Kembali</a>
+      <a href="/admin.html">Admin</a>
     </div>
-    <p id="desc" style="opacity:.85"></p>
-    <p id="err" style="color:#ff8080"></p>
+
+    <h1 class="title" id="t">Loading…</h1>
+    <p class="desc" id="d"></p>
+
+    <div class="player">
+      <video id="v" controls playsinline preload="metadata"></video>
+    </div>
+
+    <div class="meta" id="m"></div>
+    <div class="err" id="e"></div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script>
+    function fail(msg){ document.getElementById("e").textContent = msg; }
+    function fmt(iso){ try{return new Date(iso).toLocaleString("id-ID");}catch{return "";}}
+
     async function main(){
       const url = new URL(location.href);
       const slug = url.searchParams.get("slug");
-      if (!slug) return fail("Missing slug");
+      if (!slug) return fail("Missing slug.");
 
       const res = await fetch("/api/post?slug=" + encodeURIComponent(slug), { cache: "no-store" });
       if (!res.ok) return fail("Video tidak ditemukan / belum dipublish.");
 
       const p = await res.json();
-      document.getElementById("title").textContent = p.title || "Untitled";
-      document.getElementById("desc").textContent = p.description || "";
+      document.getElementById("t").textContent = p.title || "Untitled";
+      document.getElementById("d").textContent = p.description || "";
+      document.getElementById("m").textContent = "Published: " + fmt(p.published_at || p.created_at);
 
-      const video = document.getElementById("vid");
-      if (!p.video_url) return fail("Video URL kosong.");
-      video.src = p.video_url;
+      const video = document.getElementById("v");
+      const src = p.video_url;
+
+      if (!src) return fail("video_url kosong.");
+      const isHls = /\.m3u8(\?|#|$)/i.test(src);
+
+      if (isHls) {
+        if (video.canPlayType("application/vnd.apple.mpegurl")) {
+          video.src = src; // Safari
+        } else if (window.Hls && Hls.isSupported()) {
+          const hls = new Hls({ enableWorker: true });
+          hls.loadSource(src);
+          hls.attachMedia(video);
+        } else {
+          return fail("Browser tidak support HLS (.m3u8).");
+        }
+      } else {
+        video.src = src; // mp4, dll
+      }
     }
-
-    function fail(msg){
-      document.getElementById("err").textContent = msg;
-    }
-
     main();
   </script>
 </body>
