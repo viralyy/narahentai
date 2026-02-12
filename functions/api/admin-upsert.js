@@ -19,10 +19,7 @@ export async function onRequestPost({ request, env }) {
     const deny = requireAdmin(request, env);
     if (deny) return deny;
 
-    const bodyText = await request.text();
-    let body;
-    try { body = JSON.parse(bodyText); }
-    catch { return new Response("Invalid JSON", { status: 400 }); }
+    const body = await request.json();
 
     const {
       id = null,
@@ -31,21 +28,23 @@ export async function onRequestPost({ request, env }) {
       description = "",
       thumbnail_url = "",
       video_url,
+      duration_minutes = 0,
       published = false
     } = body;
 
-    if (!title || !video_url) return new Response("title & video_url wajib", { status: 400 });
+    if (!title || !video_url) {
+      return new Response("title & video_url wajib", { status: 400 });
+    }
 
     const finalSlug = slugify(slug || title);
-    if (!finalSlug) return new Response("slug invalid", { status: 400 });
-
     const now = new Date().toISOString();
     const pub = published ? 1 : 0;
+    const dur = Number(duration_minutes) || 0;
 
     if (id) {
       await env.DB.prepare(`
         UPDATE posts
-        SET title = ?, slug = ?, description = ?, thumbnail_url = ?, video_url = ?,
+        SET title = ?, slug = ?, description = ?, thumbnail_url = ?, video_url = ?, duration_minutes = ?,
             published = ?, updated_at = ?,
             published_at = CASE
               WHEN ? = 1 AND published_at IS NULL THEN ?
@@ -54,27 +53,28 @@ export async function onRequestPost({ request, env }) {
             END
         WHERE id = ?
       `).bind(
-        title, finalSlug, description, thumbnail_url, video_url,
+        title, finalSlug, description, thumbnail_url, video_url, dur,
         pub, now,
         pub, now,
         pub,
         id
       ).run();
 
-      return Response.json({ ok: true, id, slug: finalSlug });
+      return Response.json({ ok: true });
     } else {
       const publishedAt = pub ? now : null;
-      const r = await env.DB.prepare(`
-        INSERT INTO posts (title, slug, description, thumbnail_url, video_url, published, created_at, updated_at, published_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+
+      await env.DB.prepare(`
+        INSERT INTO posts (title, slug, description, thumbnail_url, video_url, duration_minutes, published, created_at, updated_at, published_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).bind(
-        title, finalSlug, description, thumbnail_url, video_url,
+        title, finalSlug, description, thumbnail_url, video_url, dur,
         pub, now, now, publishedAt
       ).run();
 
-      return Response.json({ ok: true, id: r?.meta?.last_row_id ?? null, slug: finalSlug });
+      return Response.json({ ok: true });
     }
   } catch (e) {
-    return new Response("Server error: " + (e?.stack || e?.message || String(e)), { status: 500 });
+    return new Response("Server error: " + e.message, { status: 500 });
   }
 }
