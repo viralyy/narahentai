@@ -4,12 +4,15 @@ export async function onRequestGet({ request, env }) {
   if (!slug) return new Response("Missing slug", { status: 400 });
 
   const row = await env.DB.prepare(`
-    SELECT title, description, thumbnail_url, video_url
+    SELECT title, slug, description, thumbnail_url, video_url, published_at, created_at
     FROM posts
     WHERE slug = ? AND published = 1
     LIMIT 1
   `).bind(slug).first();
 
   if (!row) return new Response("Not found", { status: 404 });
-  return Response.json(row);
+
+  return Response.json(row, {
+    headers: { "content-type": "application/json; charset=utf-8" }
+  });
 }
