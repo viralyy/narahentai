@@ -14,7 +14,8 @@
     *{box-sizing:border-box}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu;background:var(--bg);color:var(--txt)}
     a{color:inherit;text-decoration:none}
-    .wrap{max-width:980px;margin:0 auto;padding:10px 12px 24px}
+    .wrap{max-width:1400px;margin:0 auto;padding:10px 12px 24px}
+
     /* header kecil */
     .header{
       position:sticky; top:0; z-index:10;
@@ -30,7 +31,6 @@
       box-shadow: 0 12px 30px rgba(95,66,255,.22);
       position:relative; overflow:hidden;
     }
-    /* “anime-ish” shine */
     .logo:after{
       content:""; position:absolute; inset:-40%;
       background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
@@ -47,12 +47,8 @@
       display:grid;place-items:center;cursor:pointer;
     }
     .iconbtn:active{transform:scale(.98)}
-    .adminbtn{
-      padding:9px 12px;border-radius:999px;border:var(--bd);
-      background: rgba(255,255,255,.06);font-size:13px;
-    }
 
-    /* search panel anim */
+    /* SEARCH */
     .searchWrap{overflow:hidden;max-height:0;transition:max-height .28s ease}
     .searchWrap.open{max-height:72px}
     .searchInner{padding:0 12px 12px}
@@ -69,9 +65,17 @@
       width:100%;font-size:14px;
     }
 
-    /* grid 2 kolom */
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
-    @media (max-width:720px){ .grid{grid-template-columns:1fr} }
+    /* GRID FIXED */
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr); /* HP 2 kolom */
+      gap:12px;
+      margin-top:12px;
+    }
+    @media (min-width:1024px){
+      .grid{grid-template-columns:repeat(5,1fr);} /* Desktop 5 kolom */
+    }
+
     .card{
       border:var(--bd); background: var(--card);
       border-radius: var(--br); overflow:hidden;
@@ -79,13 +83,12 @@
     }
     .thumb{width:100%;aspect-ratio:16/9;object-fit:cover;background:#1b1b28;display:block}
     .pad{padding:10px 11px}
-    .ctitle{font-weight:800;line-height:1.25;letter-spacing:.2px}
-    .meta{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;color:var(--mut);font-size:12px}
+    .ctitle{font-weight:800;line-height:1.25;letter-spacing:.2px;font-size:14px}
+    .meta{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;color:var(--mut);font-size:11px}
     .pill{border:var(--bd);padding:4px 8px;border-radius:999px;background:rgba(0,0,0,.18)}
     .topline{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
     .play{border:var(--bd);background:rgba(0,0,0,.22);padding:6px 10px;border-radius:999px;font-size:12px;color:var(--mut)}
 
-    /* pager */
     .pager{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:16px 0 4px}
     .pbtn{
       border:var(--bd);background:rgba(255,255,255,.06);color:var(--txt);
@@ -101,34 +104,23 @@
   </style>
 </head>
 <body>
+
+  <!-- HEADER -->
   <div class="header">
     <div class="bar">
       <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
+        <div class="logo"></div>
         <div class="title">Narahentai</div>
       </div>
-
       <div class="right">
-        <button class="iconbtn" id="btnSearch" title="Search" aria-label="Search">
-          <!-- magnifier -->
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="2"/>
-            <path d="M21 21l-4.2-4.2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
+        <button class="iconbtn" id="btnSearch"></button>
       </div>
     </div>
 
     <div class="searchWrap" id="searchWrap">
       <div class="searchInner">
         <div class="searchBox">
-          <span style="opacity:.75"></span>
-          <input id="q" placeholder="Cari judul / slug…" />
-          <button class="iconbtn" id="btnGo" title="Go" aria-label="Go" style="width:36px;height:36px">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <path d="M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
+          <input id="q" placeholder="Cari judul..." />
         </div>
       </div>
     </div>
@@ -148,83 +140,9 @@
     </footer>
   </div>
 
-  <script>
-    const grid = document.getElementById("grid");
-    const pinfo = document.getElementById("pinfo");
-    const prevBtn = document.getElementById("prev");
-    const nextBtn = document.getElementById("next");
-    const qInput = document.getElementById("q");
-    const searchWrap = document.getElementById("searchWrap");
-    const btnSearch = document.getElementById("btnSearch");
-    const btnGo = document.getElementById("btnGo");
+<script>
+document.getElementById("year").textContent=new Date().getFullYear()
+</script>
 
-    document.getElementById("year").textContent = new Date().getFullYear();
-
-    let page = 1;
-    let totalPages = 1;
-    let q = "";
-
-    function esc(s){return (s||"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-    function fmt(iso){ try{return new Date(iso).toLocaleString("id-ID");}catch{return "";}}
-
-    async function load(){
-      const url = `/api/posts?page=${page}&q=${encodeURIComponent(q)}`;
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok){
-        pinfo.textContent = `API error (${res.status})`;
-        grid.innerHTML = "";
-        return;
-      }
-      const data = await res.json();
-      totalPages = data.totalPages || 1;
-
-      const items = data.items || [];
-      pinfo.textContent = `Page ${data.page || page} / ${totalPages} • ${data.total || 0} video`;
-
-      prevBtn.disabled = (page <= 1);
-      nextBtn.disabled = (page >= totalPages);
-
-      if (!items.length){
-        grid.innerHTML = `<div style="grid-column:1/-1;color:var(--mut);padding:10px 2px">Tidak ada hasil.</div>`;
-        return;
-      }
-
-      grid.innerHTML = items.map(p => `
-        <a class="card" href="/watch.html?slug=${encodeURIComponent(p.slug)}">
-          <img class="thumb" src="${p.thumbnail_url || ""}" alt="">
-          <div class="pad">
-            <div class="topline">
-              <div class="ctitle">${esc(p.title)}</div>
-              <div class="play">▶</div>
-            </div>
-            <div class="meta">
-              <span class="pill">${(p.duration_minutes||0)} menit</span>
-              <span class="pill">${fmt(p.published_at || p.created_at)}</span>
-              <span class="pill">${(p.views||0)} views</span>
-            </div>
-          </div>
-        </a>
-      `).join("");
-    }
-
-    prevBtn.addEventListener("click", () => { if (page > 1) { page--; load(); window.scrollTo({top:0,behavior:"smooth"}); } });
-    nextBtn.addEventListener("click", () => { if (page < totalPages) { page++; load(); window.scrollTo({top:0,behavior:"smooth"}); } });
-
-    // Search UI anim
-    btnSearch.addEventListener("click", () => {
-      searchWrap.classList.toggle("open");
-      if (searchWrap.classList.contains("open")) setTimeout(() => qInput.focus(), 80);
-    });
-
-    function doSearch(){
-      q = (qInput.value || "").trim();
-      page = 1;
-      load();
-    }
-    btnGo.addEventListener("click", doSearch);
-    qInput.addEventListener("keydown", (e) => { if (e.key === "Enter") doSearch(); });
-
-    load();
-  </script>
 </body>
 </html>
