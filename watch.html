@@ -85,14 +85,15 @@ h1{margin:14px 0 6px;font-size:20px}
  color:var(--mut);
 }
 
+/* ✅ grid rekomendasi: HP 2 kolom, desktop 5 kolom */
 .grid{
  margin-top:10px;
  display:grid;
- grid-template-columns:1fr 1fr;
+ grid-template-columns:repeat(2,1fr); /* HP 2 kolom */
  gap:12px;
 }
-@media(max-width:720px){
- .grid{grid-template-columns:1fr}
+@media (min-width:1024px){
+ .grid{grid-template-columns:repeat(5,1fr);} /* Desktop 5 kolom */
 }
 
 .card{
@@ -161,65 +162,78 @@ footer{
 
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script>
-document.getElementById("year").textContent=new Date().getFullYear()
+document.getElementById("year").textContent = new Date().getFullYear();
 
-function fmt(d){try{return new Date(d).toLocaleString("id-ID")}catch{return ""}}
+function fmt(d){ try { return new Date(d).toLocaleString("id-ID"); } catch { return ""; } }
 
 async function main(){
- const slug=new URL(location.href).searchParams.get("slug")
- if(!slug){
-   document.getElementById("title").textContent="Video tidak ditemukan"
-   return
- }
+  const slug = new URL(location.href).searchParams.get("slug");
+  if(!slug){
+    document.getElementById("title").textContent = "Video tidak ditemukan";
+    return;
+  }
 
- const r=await fetch("/api/post?slug="+slug)
- if(!r.ok){
-   document.getElementById("title").textContent="Video tidak ditemukan"
-   return
- }
- const p=await r.json()
+  const r = await fetch("/api/post?slug=" + encodeURIComponent(slug), { cache: "no-store" });
+  if(!r.ok){
+    document.getElementById("title").textContent = "Video tidak ditemukan";
+    return;
+  }
+  const p = await r.json();
 
- document.getElementById("title").textContent=p.title
- document.getElementById("desc").textContent=p.description||""
- document.getElementById("meta").innerHTML=`
-   <div class="pill">Views: ${p.views||0}</div>
-   <div class="pill">Publish: ${fmt(p.published_at||p.created_at)}</div>
-   <div class="pill">Durasi: ${p.duration_minutes||0} menit</div>
- `
+  document.getElementById("title").textContent = p.title || "Untitled";
+  document.getElementById("desc").textContent = p.description || "";
+  document.getElementById("meta").innerHTML = `
+    <div class="pill">Views: ${p.views||0}</div>
+    <div class="pill">Publish: ${fmt(p.published_at||p.created_at)}</div>
+    <div class="pill">Durasi: ${p.duration_minutes||0} menit</div>
+  `;
 
- // increment view
- fetch("/api/view?slug="+slug,{method:"POST"})
+  // ✅ increment view + update UI realtime
+  fetch("/api/view?slug=" + encodeURIComponent(slug), {
+    method: "POST",
+    cache: "no-store",
+    keepalive: true
+  })
+  .then(r => r.json())
+  .then(x => {
+    if (x && x.ok) {
+      document.querySelector("#meta .pill").textContent = "Views: " + x.views;
+    }
+  })
+  .catch(()=>{});
 
- const video=document.getElementById("v")
- if(p.video_url.endsWith(".m3u8")){
-   if(video.canPlayType("application/vnd.apple.mpegurl")){
-     video.src=p.video_url
-   }else{
-     const hls=new Hls()
-     hls.loadSource(p.video_url)
-     hls.attachMedia(video)
-   }
- }else{
-   video.src=p.video_url
- }
+  const video = document.getElementById("v");
+  const url = p.video_url || "";
 
- // rekomendasi
- const list=await fetch("/api/posts?page=1&q=")
- const data=await list.json()
- const items=(data.items||[]).filter(x=>x.slug!==slug).slice(0,4)
+  if(url.endsWith(".m3u8")){
+    if(video.canPlayType("application/vnd.apple.mpegurl")){
+      video.src = url;
+    }else{
+      const hls = new Hls();
+      hls.loadSource(url);
+      hls.attachMedia(video);
+    }
+  }else{
+    video.src = url;
+  }
 
- document.getElementById("rec").innerHTML=items.map(x=>`
-   <a class="card" href="/watch.html?slug=${x.slug}">
-     <img class="thumb" src="${x.thumbnail_url||""}">
-     <div class="pad">
-       <div class="ctitle">${x.title}</div>
-       <div class="cmeta">${x.views||0} views</div>
-     </div>
-   </a>
- `).join("")
+  // rekomendasi
+  const list = await fetch("/api/posts?page=1&q=", { cache: "no-store" });
+  const data = await list.json();
+  const items = (data.items || []).filter(x => x.slug !== slug).slice(0, 10);
+
+  document.getElementById("rec").innerHTML = items.map(x => `
+    <a class="card" href="/watch.html?slug=${encodeURIComponent(x.slug)}">
+      <img class="thumb" src="${x.thumbnail_url||""}">
+      <div class="pad">
+        <div class="ctitle">${x.title||""}</div>
+        <div class="cmeta">${x.views||0} views</div>
+      </div>
+    </a>
+  `).join("");
 }
 
-main()
+main();
 </script>
 
 </body>
