@@ -3,57 +3,48 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Nonton</title>
+  <title>Semua Video</title>
   <style>
     body{margin:0;font-family:system-ui;background:#0b0b0b;color:#fff}
     .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
-    a.card{display:block;text-decoration:none;color:inherit;background:#151515;border-radius:16px;overflow:hidden}
-    .thumb{width:100%;aspect-ratio:16/9;object-fit:cover;background:#222}
-    .meta{padding:12px}
-    .title{font-weight:700;line-height:1.25}
-    .sub{opacity:.7;font-size:12px;margin-top:6px}
-    .top{display:flex;justify-content:space-between;align-items:center;gap:12px}
-    .btn{font-size:12px;color:#fff;opacity:.8;text-decoration:none;border:1px solid #333;padding:8px 10px;border-radius:10px}
+    a.card{display:block;text-decoration:none;color:#fff;background:#151515;border-radius:16px;overflow:hidden}
+    img{width:100%;aspect-ratio:16/9;object-fit:cover;background:#222;display:block}
+    .meta{padding:12px;font-weight:700}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="top">
-      <h1 style="margin:0">Semua Video</h1>
-      <a class="btn" href="/admin.html">Admin</a>
-    </div>
-    <div style="height:12px"></div>
+    <h1>Semua Video</h1>
+    <div id="status" style="opacity:.7;margin-bottom:12px">Loading...</div>
     <div id="grid" class="grid"></div>
   </div>
 
   <script>
-    async function main(){
-      const res = await fetch("/api/posts", { cache: "no-store" });
-      const posts = await res.json();
-      const grid = document.getElementById("grid");
-      if (!Array.isArray(posts) || posts.length === 0) {
-        grid.innerHTML = `<div style="opacity:.7">Belum ada video yang dipublish.</div>`;
-        return;
-      }
-      grid.innerHTML = posts.map(p => `
-        <a class="card" href="/watch.html?slug=${encodeURIComponent(p.slug)}">
-          <img class="thumb" src="${p.thumbnail_url || ""}" alt="">
-          <div class="meta">
-            <div class="title">${escapeHtml(p.title)}</div>
-            <div class="sub">${formatDate(p.published_at || p.created_at)}</div>
-          </div>
-        </a>
-      `).join("");
-    }
+    (async () => {
+      const status = document.getElementById("status");
+      try {
+        const res = await fetch("/api/posts", { cache: "no-store" });
+        status.textContent = "API status: " + res.status;
+        const posts = await res.json();
 
-    function formatDate(iso){
-      try { return new Date(iso).toLocaleString("id-ID"); } catch { return ""; }
-    }
-    function escapeHtml(s){
-      return (s||"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    }
-    main();
+        if (!posts.length) {
+          status.textContent = "Belum ada video.";
+          return;
+        }
+
+        document.getElementById("grid").innerHTML = posts.map(p => `
+          <a class="card" href="/watch.html?slug=${encodeURIComponent(p.slug)}">
+            <img src="${p.thumbnail_url || ""}" alt="">
+            <div class="meta">${(p.title || "")}</div>
+          </a>
+        `).join("");
+
+        status.textContent = "";
+      } catch (e) {
+        status.textContent = "Error: " + e.message;
+      }
+    })();
   </script>
 </body>
 </html>
