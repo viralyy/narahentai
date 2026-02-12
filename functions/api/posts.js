@@ -1,11 +1,12 @@
 export async function onRequestGet({ env }) {
-  // kalau DB belum dibinding, ini bakal error 500
   const { results } = await env.DB.prepare(`
-    SELECT title, slug, thumbnail_url
+    SELECT title, slug, thumbnail_url, published_at, created_at
     FROM posts
     WHERE published = 1
-    ORDER BY published_at DESC, created_at DESC
+    ORDER BY COALESCE(published_at, created_at) DESC
   `).all();
 
-  return Response.json(results);
+  return Response.json(results, {
+    headers: { "content-type": "application/json; charset=utf-8" }
+  });
 }
