@@ -4,82 +4,115 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Admin</title>
+  <meta name="theme-color" content="#0b0b0f" />
   <style>
-    body{margin:0;font-family:system-ui;background:#0b0b0b;color:#fff}
-    .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
-    input, textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #333;background:#111;color:#fff}
-    label{display:block;margin:10px 0 6px;opacity:.85}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .btn{padding:10px 12px;border-radius:10px;border:1px solid #333;background:#151515;color:#fff;cursor:pointer}
-    .btn.primary{border-color:#4c6fff}
-    .btn.danger{border-color:#ff5c5c}
-    .list{margin-top:18px;display:grid;gap:10px}
-    .item{border:1px solid #333;border-radius:14px;padding:12px;background:#111}
-    .meta{opacity:.7;font-size:12px;margin-top:4px}
-    .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
-    .tag{font-size:12px;border:1px solid #333;padding:2px 8px;border-radius:999px;opacity:.85}
-    a{color:#8ab4ff}
+    :root{
+      --bg:#0b0b0f; --card:#12121a; --txt:#f3f4ff; --mut:#a6a7c2;
+      --bd:1px solid rgba(255,255,255,.10); --br:18px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu;background:var(--bg);color:var(--txt)}
+    .wrap{max-width:1180px;margin:24px auto;padding:0 16px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    h1{margin:0;font-size:24px}
+    a{color:#8ab4ff;text-decoration:none}
+    .grid{margin-top:14px;display:grid;grid-template-columns: 380px 1fr;gap:14px}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
+    .card{background:rgba(255,255,255,.05);border:var(--bd);border-radius:var(--br);padding:14px}
+    label{display:block;margin:10px 0 6px;color:var(--mut);font-size:12px}
+    input, textarea{
+      width:100%;border-radius:14px;border:var(--bd);background:rgba(0,0,0,.25);
+      color:var(--txt);padding:11px 12px;outline:none
+    }
+    textarea{min-height:110px;resize:vertical}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+    .btn{
+      border:var(--bd);background:rgba(255,255,255,.06);color:var(--txt);
+      padding:10px 12px;border-radius:999px;cursor:pointer;font-size:13px
+    }
+    .btn.primary{border-color:rgba(95,66,255,.55)}
+    .btn.danger{border-color:rgba(255,92,92,.65)}
+    .hint{color:var(--mut);font-size:12px;line-height:1.5}
+    .list{display:grid;gap:10px}
+    .item{border:var(--bd);border-radius:16px;padding:12px;background:rgba(0,0,0,.20)}
+    .itop{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+    .tag{font-size:11px;padding:6px 10px;border-radius:999px;border:var(--bd);color:var(--mut)}
+    .title{font-weight:800}
+    .meta{margin-top:6px;color:var(--mut);font-size:12px}
+    .mini{margin-top:10px;display:flex;gap:10px;flex-wrap:wrap}
+    .msg{margin-top:10px;color:var(--mut);font-size:12px;white-space:pre-wrap}
+    .search{display:flex;gap:10px;align-items:center}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="top">
-      <h1 style="margin:0">Admin</h1>
+      <div>
+        <h1>Admin</h1>
+        <div class="hint">Isi password → Refresh → edit / publish.</div>
+      </div>
       <a href="/">← Back</a>
     </div>
 
-    <p style="opacity:.8;margin-top:8px">
-      Masukin password, terus Refresh buat load data.
-    </p>
+    <div class="grid">
+      <div class="card">
+        <label>Password Admin</label>
+        <input id="pass" type="password" placeholder="ADMIN_PASSWORD" />
 
-    <label>Password Admin</label>
-    <input id="pass" type="password" placeholder="Masukkan password admin" />
+        <hr style="border:0;border-top:1px solid rgba(255,255,255,.10);margin:14px 0">
 
-    <hr style="border:0;border-top:1px solid #222;margin:18px 0">
+        <input id="id" type="hidden" />
 
-    <h2 style="margin:0 0 8px">Create / Edit Post</h2>
+        <label>Title</label>
+        <input id="title" placeholder="Judul video" />
 
-    <input id="id" type="hidden" />
+        <div class="row2">
+          <div>
+            <label>Slug (optional)</label>
+            <input id="slug" placeholder="auto dari title" />
+          </div>
+          <div>
+            <label>Thumbnail URL (optional)</label>
+            <input id="thumb" placeholder="https://...jpg" />
+          </div>
+        </div>
 
-    <label>Title</label>
-    <input id="title" placeholder="Judul video" />
+        <label>Video URL (mp4 / m3u8)</label>
+        <input id="video" placeholder="https://...mp4 atau ...m3u8" />
 
-    <div class="row">
-      <div>
-        <label>Slug (optional)</label>
-        <input id="slug" placeholder="kosongin = auto dari title" />
+        <label>Description</label>
+        <textarea id="desc" placeholder="Deskripsi..."></textarea>
+
+        <label style="display:flex;align-items:center;gap:10px;margin-top:10px">
+          <input id="published" type="checkbox" style="width:auto;transform:scale(1.15)" />
+          Publish
+        </label>
+
+        <div class="btns">
+          <button class="btn primary" onclick="save()">Save</button>
+          <button class="btn" onclick="resetForm()">New</button>
+          <button class="btn danger" onclick="del()">Delete</button>
+          <button class="btn" onclick="load()">Refresh</button>
+        </div>
+
+        <div class="msg" id="msg"></div>
       </div>
-      <div>
-        <label>Thumbnail URL (optional)</label>
-        <input id="thumb" placeholder="https://...jpg" />
+
+      <div class="card">
+        <div class="search">
+          <input id="q" placeholder="Cari post…" />
+          <button class="btn" onclick="load()">Reload</button>
+        </div>
+        <div style="height:10px"></div>
+        <div class="list" id="list"></div>
       </div>
     </div>
-
-    <label>Video URL (mp4 / m3u8)</label>
-    <input id="video" placeholder="https://...mp4 atau ...m3u8" />
-
-    <label>Description (optional)</label>
-    <textarea id="desc" rows="4" placeholder="Deskripsi..."></textarea>
-
-    <label>
-      <input id="published" type="checkbox" />
-      Publish
-    </label>
-
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-      <button class="btn primary" onclick="save()">Save</button>
-      <button class="btn" onclick="resetForm()">New</button>
-      <button class="btn danger" onclick="del()">Delete</button>
-      <button class="btn" onclick="load()">Refresh</button>
-    </div>
-
-    <p id="msg" style="opacity:.9"></p>
-
-    <div id="list" class="list"></div>
   </div>
 
   <script>
     const $ = (id) => document.getElementById(id);
+    let all = [];
 
     $("pass").value = localStorage.getItem("admin_pass") || "";
     $("pass").addEventListener("input", () => localStorage.setItem("admin_pass", $("pass").value));
@@ -90,8 +123,9 @@
         "x-admin-password": $("pass").value || ""
       };
     }
-
     function setMsg(t){ $("msg").textContent = t || ""; }
+    function fmt(iso){ try{return new Date(iso).toLocaleString("id-ID");}catch{return "";} }
+    function esc(s){ return (s||"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
     function resetForm(){
       $("id").value = "";
@@ -104,27 +138,29 @@
       setMsg("");
     }
 
-    async function load(){
-      setMsg("");
-      const res = await fetch("/api/admin-list", { headers: headers(), cache: "no-store" });
-      const text = await res.text();
-      if (!res.ok) { setMsg("Error: " + text); return; }
+    function render(list){
+      const q = ($("q").value || "").trim().toLowerCase();
+      const filtered = q ? list.filter(p =>
+        (p.title||"").toLowerCase().includes(q) || (p.slug||"").toLowerCase().includes(q)
+      ) : list;
 
-      const items = JSON.parse(text);
-      const list = $("list");
-      if (!items.length) { list.innerHTML = `<div style="opacity:.7">Belum ada post.</div>`; return; }
+      const el = $("list");
+      if (!filtered.length){
+        el.innerHTML = `<div class="hint">Belum ada post.</div>`;
+        return;
+      }
 
-      list.innerHTML = items.map(p => `
+      el.innerHTML = filtered.map(p => `
         <div class="item">
-          <div class="top">
+          <div class="itop">
             <div>
-              <div style="font-weight:700">${esc(p.title)}</div>
+              <div class="title">${esc(p.title)}</div>
               <div class="meta">slug: ${esc(p.slug)} • updated: ${fmt(p.updated_at)}</div>
             </div>
             <div class="tag">${p.published ? "PUBLISHED" : "DRAFT"}</div>
           </div>
           <div class="meta" style="margin-top:8px">video: ${esc(p.video_url || "")}</div>
-          <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
+          <div class="mini">
             <button class="btn" onclick='edit(${JSON.stringify(p)})'>Edit</button>
             <a class="btn" href="/watch.html?slug=${encodeURIComponent(p.slug)}" target="_blank">Open</a>
           </div>
@@ -132,7 +168,18 @@
       `).join("");
     }
 
-    function edit(p){
+    async function load(){
+      setMsg("");
+      const res = await fetch("/api/admin-list", { headers: headers(), cache: "no-store" });
+      const text = await res.text();
+      if (!res.ok) { setMsg("Error: " + text); return; }
+      all = JSON.parse(text);
+      render(all);
+    }
+
+    $("q").addEventListener("input", () => render(all));
+
+    window.edit = function(p){
       $("id").value = p.id;
       $("title").value = p.title || "";
       $("slug").value = p.slug || "";
@@ -144,7 +191,7 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-    async function save(){
+    window.save = async function(){
       setMsg("");
       const payload = {
         id: $("id").value ? Number($("id").value) : null,
@@ -162,14 +209,14 @@
       });
       const text = await res.text();
       if (!res.ok) { setMsg("Error: " + text); return; }
-      setMsg("Saved: " + text);
+      setMsg("Saved ✅");
       await load();
     }
 
-    async function del(){
+    window.del = async function(){
       setMsg("");
       const id = $("id").value ? Number($("id").value) : null;
-      if (!id) { setMsg("Pilih post dulu (Edit) baru Delete."); return; }
+      if (!id) return setMsg("Pilih post dulu (Edit) baru Delete.");
 
       const res = await fetch("/api/admin-delete", {
         method: "POST",
@@ -178,13 +225,10 @@
       });
       const text = await res.text();
       if (!res.ok) { setMsg("Error: " + text); return; }
-      setMsg("Deleted: " + text);
+      setMsg("Deleted ✅");
       resetForm();
       await load();
     }
-
-    function fmt(iso){ try { return new Date(iso).toLocaleString("id-ID"); } catch { return ""; } }
-    function esc(s){ return (s||"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
     load();
   </script>
