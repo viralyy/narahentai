@@ -81,6 +81,9 @@
         <label>Video URL (mp4 / m3u8)</label>
         <input id="video" placeholder="https://...mp4 atau ...m3u8" />
 
+        <label>Durasi (menit)</label>
+        <input id="dur" type="number" min="0" step="1" placeholder="contoh: 24" />
+
         <label>Description</label>
         <textarea id="desc" placeholder="Deskripsi..."></textarea>
 
@@ -133,6 +136,7 @@
       $("slug").value = "";
       $("thumb").value = "";
       $("video").value = "";
+      $("dur").value = "";
       $("desc").value = "";
       $("published").checked = false;
       setMsg("");
@@ -160,6 +164,7 @@
             <div class="tag">${p.published ? "PUBLISHED" : "DRAFT"}</div>
           </div>
           <div class="meta" style="margin-top:8px">video: ${esc(p.video_url || "")}</div>
+          <div class="meta">durasi: ${(p.duration_minutes||0)} menit • views: ${(p.views||0)}</div>
           <div class="mini">
             <button class="btn" onclick='edit(${JSON.stringify(p)})'>Edit</button>
             <a class="btn" href="/watch.html?slug=${encodeURIComponent(p.slug)}" target="_blank">Open</a>
@@ -185,6 +190,7 @@
       $("slug").value = p.slug || "";
       $("thumb").value = p.thumbnail_url || "";
       $("video").value = p.video_url || "";
+      $("dur").value = p.duration_minutes || 0;
       $("desc").value = p.description || "";
       $("published").checked = !!p.published;
       setMsg("Editing id=" + p.id);
@@ -199,6 +205,7 @@
         slug: $("slug").value.trim(),
         thumbnail_url: $("thumb").value.trim(),
         video_url: $("video").value.trim(),
+        duration_minutes: Number($("dur").value || 0),
         description: $("desc").value.trim(),
         published: $("published").checked
       };
