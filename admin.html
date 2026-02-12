@@ -4,10 +4,189 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Admin</title>
+  <style>
+    body{margin:0;font-family:system-ui;background:#0b0b0b;color:#fff}
+    .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
+    input, textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #333;background:#111;color:#fff}
+    label{display:block;margin:10px 0 6px;opacity:.85}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .btn{padding:10px 12px;border-radius:10px;border:1px solid #333;background:#151515;color:#fff;cursor:pointer}
+    .btn.primary{border-color:#4c6fff}
+    .btn.danger{border-color:#ff5c5c}
+    .list{margin-top:18px;display:grid;gap:10px}
+    .item{border:1px solid #333;border-radius:14px;padding:12px;background:#111}
+    .meta{opacity:.7;font-size:12px;margin-top:4px}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .tag{font-size:12px;border:1px solid #333;padding:2px 8px;border-radius:999px;opacity:.85}
+    a{color:#8ab4ff}
+  </style>
 </head>
-<body style="font-family:system-ui;background:#0b0b0b;color:#fff;padding:24px">
-  <h1>Admin</h1>
-  <p>Admin panel nyusul. Yang penting index + player dulu jalan.</p>
-  <a href="/" style="color:#8ab4ff">← Back</a>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <h1 style="margin:0">Admin</h1>
+      <a href="/">← Back</a>
+    </div>
+
+    <p style="opacity:.8;margin-top:8px">
+      Masukin password, terus Refresh buat load data.
+    </p>
+
+    <label>Password Admin</label>
+    <input id="pass" type="password" placeholder="Masukkan password admin" />
+
+    <hr style="border:0;border-top:1px solid #222;margin:18px 0">
+
+    <h2 style="margin:0 0 8px">Create / Edit Post</h2>
+
+    <input id="id" type="hidden" />
+
+    <label>Title</label>
+    <input id="title" placeholder="Judul video" />
+
+    <div class="row">
+      <div>
+        <label>Slug (optional)</label>
+        <input id="slug" placeholder="kosongin = auto dari title" />
+      </div>
+      <div>
+        <label>Thumbnail URL (optional)</label>
+        <input id="thumb" placeholder="https://...jpg" />
+      </div>
+    </div>
+
+    <label>Video URL (mp4 / m3u8)</label>
+    <input id="video" placeholder="https://...mp4 atau ...m3u8" />
+
+    <label>Description (optional)</label>
+    <textarea id="desc" rows="4" placeholder="Deskripsi..."></textarea>
+
+    <label>
+      <input id="published" type="checkbox" />
+      Publish
+    </label>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+      <button class="btn primary" onclick="save()">Save</button>
+      <button class="btn" onclick="resetForm()">New</button>
+      <button class="btn danger" onclick="del()">Delete</button>
+      <button class="btn" onclick="load()">Refresh</button>
+    </div>
+
+    <p id="msg" style="opacity:.9"></p>
+
+    <div id="list" class="list"></div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    $("pass").value = localStorage.getItem("admin_pass") || "";
+    $("pass").addEventListener("input", () => localStorage.setItem("admin_pass", $("pass").value));
+
+    function headers(){
+      return {
+        "content-type": "application/json",
+        "x-admin-password": $("pass").value || ""
+      };
+    }
+
+    function setMsg(t){ $("msg").textContent = t || ""; }
+
+    function resetForm(){
+      $("id").value = "";
+      $("title").value = "";
+      $("slug").value = "";
+      $("thumb").value = "";
+      $("video").value = "";
+      $("desc").value = "";
+      $("published").checked = false;
+      setMsg("");
+    }
+
+    async function load(){
+      setMsg("");
+      const res = await fetch("/api/admin-list", { headers: headers(), cache: "no-store" });
+      const text = await res.text();
+      if (!res.ok) { setMsg("Error: " + text); return; }
+
+      const items = JSON.parse(text);
+      const list = $("list");
+      if (!items.length) { list.innerHTML = `<div style="opacity:.7">Belum ada post.</div>`; return; }
+
+      list.innerHTML = items.map(p => `
+        <div class="item">
+          <div class="top">
+            <div>
+              <div style="font-weight:700">${esc(p.title)}</div>
+              <div class="meta">slug: ${esc(p.slug)} • updated: ${fmt(p.updated_at)}</div>
+            </div>
+            <div class="tag">${p.published ? "PUBLISHED" : "DRAFT"}</div>
+          </div>
+          <div class="meta" style="margin-top:8px">video: ${esc(p.video_url || "")}</div>
+          <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn" onclick='edit(${JSON.stringify(p)})'>Edit</button>
+            <a class="btn" href="/watch.html?slug=${encodeURIComponent(p.slug)}" target="_blank">Open</a>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function edit(p){
+      $("id").value = p.id;
+      $("title").value = p.title || "";
+      $("slug").value = p.slug || "";
+      $("thumb").value = p.thumbnail_url || "";
+      $("video").value = p.video_url || "";
+      $("desc").value = p.description || "";
+      $("published").checked = !!p.published;
+      setMsg("Editing id=" + p.id);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function save(){
+      setMsg("");
+      const payload = {
+        id: $("id").value ? Number($("id").value) : null,
+        title: $("title").value.trim(),
+        slug: $("slug").value.trim(),
+        thumbnail_url: $("thumb").value.trim(),
+        video_url: $("video").value.trim(),
+        description: $("desc").value.trim(),
+        published: $("published").checked
+      };
+      const res = await fetch("/api/admin-upsert", {
+        method: "POST",
+        headers: headers(),
+        body: JSON.stringify(payload)
+      });
+      const text = await res.text();
+      if (!res.ok) { setMsg("Error: " + text); return; }
+      setMsg("Saved: " + text);
+      await load();
+    }
+
+    async function del(){
+      setMsg("");
+      const id = $("id").value ? Number($("id").value) : null;
+      if (!id) { setMsg("Pilih post dulu (Edit) baru Delete."); return; }
+
+      const res = await fetch("/api/admin-delete", {
+        method: "POST",
+        headers: headers(),
+        body: JSON.stringify({ id })
+      });
+      const text = await res.text();
+      if (!res.ok) { setMsg("Error: " + text); return; }
+      setMsg("Deleted: " + text);
+      resetForm();
+      await load();
+    }
+
+    function fmt(iso){ try { return new Date(iso).toLocaleString("id-ID"); } catch { return ""; } }
+    function esc(s){ return (s||"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    load();
+  </script>
 </body>
 </html>
