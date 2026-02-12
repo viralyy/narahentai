@@ -3,48 +3,123 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Semua Video</title>
+  <title>Nonton</title>
+  <meta name="theme-color" content="#0b0b0f" />
   <style>
-    body{margin:0;font-family:system-ui;background:#0b0b0b;color:#fff}
-    .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
-    a.card{display:block;text-decoration:none;color:#fff;background:#151515;border-radius:16px;overflow:hidden}
-    img{width:100%;aspect-ratio:16/9;object-fit:cover;background:#222;display:block}
-    .meta{padding:12px;font-weight:700}
+    :root{
+      --bg:#0b0b0f; --card:#12121a; --card2:#151521; --txt:#f3f4ff; --mut:#a6a7c2;
+      --br:18px; --bd:1px solid rgba(255,255,255,.10);
+      --sh: 0 18px 60px rgba(0,0,0,.55);
+      --grad: radial-gradient(1000px 600px at 20% -10%, rgba(95, 66, 255, .30), transparent 55%),
+              radial-gradient(900px 600px at 100% 0%, rgba(0, 200, 255, .16), transparent 55%),
+              radial-gradient(900px 600px at 60% 120%, rgba(255, 77, 180, .12), transparent 60%);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu;background:var(--bg);color:var(--txt)}
+    .bg{position:fixed;inset:0;pointer-events:none;background:var(--grad)}
+    .wrap{max-width:1180px;margin:24px auto;padding:0 16px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:14px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:40px;height:40px;border-radius:14px;background:
+      linear-gradient(135deg, rgba(95,66,255,.9), rgba(0,200,255,.7));
+      box-shadow:0 12px 30px rgba(95,66,255,.25)}
+    h1{margin:0;font-size:26px;letter-spacing:.2px}
+    .sub{margin:2px 0 0;color:var(--mut);font-size:13px}
+    .actions{display:flex;align-items:center;gap:10px}
+    .pill{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border:var(--bd);border-radius:999px;padding:10px 12px}
+    .pill input{border:0;outline:0;background:transparent;color:var(--txt);width:min(320px,48vw);font-size:14px}
+    .btn{border:var(--bd);background:rgba(255,255,255,.06);color:var(--txt);padding:10px 12px;border-radius:999px;text-decoration:none;font-size:13px}
+    .btn:hover{background:rgba(255,255,255,.09)}
+    .grid{margin-top:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+    .card{position:relative;display:block;text-decoration:none;color:inherit;border-radius:var(--br);overflow:hidden;
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:var(--bd); box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .thumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#1b1b28}
+    .pad{padding:12px}
+    .title{font-weight:750;line-height:1.25;letter-spacing:.2px}
+    .meta{margin-top:6px;color:var(--mut);font-size:12px;display:flex;justify-content:space-between;gap:10px}
+    .chip{position:absolute;top:10px;left:10px;font-size:11px;padding:6px 10px;border-radius:999px;
+      background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.14);backdrop-filter: blur(10px)}
+    .empty{margin-top:18px;color:var(--mut)}
   </style>
 </head>
 <body>
+  <div class="bg"></div>
   <div class="wrap">
-    <h1>Semua Video</h1>
-    <div id="status" style="opacity:.7;margin-bottom:12px">Loading...</div>
+    <div class="top">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <h1>Semua Video</h1>
+          <div class="sub" id="count">Loading…</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <div class="pill">
+          <span style="opacity:.75">🔎</span>
+          <input id="q" placeholder="Cari judul…" />
+        </div>
+        <a class="btn" href="/admin.html">Admin</a>
+      </div>
+    </div>
+
     <div id="grid" class="grid"></div>
+    <div id="empty" class="empty"></div>
   </div>
 
   <script>
-    (async () => {
-      const status = document.getElementById("status");
-      try {
-        const res = await fetch("/api/posts", { cache: "no-store" });
-        status.textContent = "API status: " + res.status;
-        const posts = await res.json();
+    let all = [];
 
-        if (!posts.length) {
-          status.textContent = "Belum ada video.";
-          return;
-        }
+    function esc(s){return (s||"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+    function fmt(iso){ try{return new Date(iso).toLocaleString("id-ID");}catch{return "";}}
 
-        document.getElementById("grid").innerHTML = posts.map(p => `
-          <a class="card" href="/watch.html?slug=${encodeURIComponent(p.slug)}">
-            <img src="${p.thumbnail_url || ""}" alt="">
-            <div class="meta">${(p.title || "")}</div>
-          </a>
-        `).join("");
+    function render(list){
+      const grid = document.getElementById("grid");
+      const empty = document.getElementById("empty");
+      document.getElementById("count").textContent = `${list.length} video`;
 
-        status.textContent = "";
-      } catch (e) {
-        status.textContent = "Error: " + e.message;
+      if (!list.length){
+        grid.innerHTML = "";
+        empty.textContent = "Belum ada video yang dipublish.";
+        return;
       }
-    })();
+      empty.textContent = "";
+
+      grid.innerHTML = list.map(p => `
+        <a class="card" href="/watch.html?slug=${encodeURIComponent(p.slug)}">
+          <span class="chip">▶ Play</span>
+          <img class="thumb" src="${p.thumbnail_url || ""}" alt="">
+          <div class="pad">
+            <div class="title">${esc(p.title)}</div>
+            <div class="meta">
+              <span>${esc(p.slug)}</span>
+              <span>${fmt(p.published_at || p.created_at)}</span>
+            </div>
+          </div>
+        </a>
+      `).join("");
+    }
+
+    async function main(){
+      const res = await fetch("/api/posts", { cache: "no-store" });
+      if (!res.ok){
+        document.getElementById("count").textContent = "API error";
+        document.getElementById("empty").textContent = `Gagal load /api/posts (${res.status}).`;
+        return;
+      }
+      all = await res.json();
+      render(all);
+
+      const q = document.getElementById("q");
+      q.addEventListener("input", () => {
+        const s = q.value.trim().toLowerCase();
+        if (!s) return render(all);
+        render(all.filter(p => (p.title||"").toLowerCase().includes(s) || (p.slug||"").toLowerCase().includes(s)));
+      });
+    }
+
+    main();
   </script>
 </body>
 </html>
