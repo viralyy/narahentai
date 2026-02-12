@@ -3,79 +3,247 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Player</title>
-  <meta name="theme-color" content="#000000" />
+  <title>Player • Narahentai</title>
+  <meta name="theme-color" content="#0b0b0f" />
   <style>
-    :root{--bg:#050508;--txt:#f3f4ff;--mut:#a6a7c2;--bd:1px solid rgba(255,255,255,.10);--br:18px}
+    :root{
+      --bg:#0b0b0f; --txt:#f3f4ff; --mut:#a6a7c2;
+      --card:rgba(255,255,255,.05); --bd:1px solid rgba(255,255,255,.10);
+      --br:16px;
+    }
     *{box-sizing:border-box}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu;background:var(--bg);color:var(--txt)}
-    .wrap{max-width:1180px;margin:20px auto;padding:0 16px}
-    a{color:#8ab4ff;text-decoration:none}
-    .top{display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .title{margin:12px 0 6px;font-size:22px;letter-spacing:.2px}
-    .desc{color:var(--mut);margin:0 0 14px;line-height:1.55}
-    .player{width:100%;aspect-ratio:16/9;border-radius:var(--br);overflow:hidden;border:var(--bd);background:#0c0c14}
-    video{width:100%;height:100%;background:#000;display:block}
+    a{color:inherit;text-decoration:none}
+
+    /* header sama kayak index */
+    .header{
+      position:sticky; top:0; z-index:10;
+      backdrop-filter: blur(12px);
+      background: linear-gradient(180deg, rgba(11,11,15,.92), rgba(11,11,15,.60));
+      border-bottom: var(--bd);
+    }
+    .bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px}
+    .brand{display:flex;align-items:center;gap:10px;min-width:0}
+    .logo{
+      width:34px;height:34px;border-radius:12px;flex:0 0 auto;
+      background: linear-gradient(135deg, rgba(255,77,180,.85), rgba(95,66,255,.85));
+      box-shadow: 0 12px 30px rgba(95,66,255,.22);
+      position:relative; overflow:hidden;
+    }
+    .logo:after{
+      content:""; position:absolute; inset:-40%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+      transform: rotate(25deg);
+      animation: shine 3.6s ease-in-out infinite;
+      opacity:.35;
+    }
+    @keyframes shine{ 0%{transform:translateX(-40%) rotate(25deg)} 50%{transform:translateX(40%) rotate(25deg)} 100%{transform:translateX(140%) rotate(25deg)} }
+    .titlebar{font-weight:850;letter-spacing:.2px;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .right{display:flex;align-items:center;gap:8px}
+    .iconbtn{
+      width:38px;height:38px;border-radius:999px;border:var(--bd);
+      background: rgba(255,255,255,.06);
+      display:grid;place-items:center;cursor:pointer;
+    }
+    .iconbtn:active{transform:scale(.98)}
+    .adminbtn{
+      padding:9px 12px;border-radius:999px;border:var(--bd);
+      background: rgba(255,255,255,.06);font-size:13px;
+    }
+
+    /* layout */
+    .wrap{max-width:980px;margin:0 auto;padding:12px 12px 24px}
+    .player{
+      border:var(--bd); background: rgba(0,0,0,.20);
+      border-radius: var(--br); overflow:hidden;
+    }
+    video{width:100%;height:auto;aspect-ratio:16/9;background:#000;display:block}
+    .content{margin-top:12px}
+    h1{margin:0 0 6px;font-size:20px;letter-spacing:.2px}
+    .subline{color:var(--mut);font-size:12px;display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+    .pill{border:var(--bd);padding:4px 8px;border-radius:999px;background:rgba(0,0,0,.18)}
+    .desc{
+      border:var(--bd);background:var(--card);
+      border-radius:var(--br);padding:12px 12px;
+      color:var(--mut);line-height:1.65;white-space:pre-wrap;
+    }
+
+    /* rekomendasi grid 2 kolom */
+    .sectionTitle{margin:16px 0 10px;font-size:14px;color:var(--mut);letter-spacing:.2px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width:720px){ .grid{grid-template-columns:1fr} }
+    .card{
+      border:var(--bd); background: var(--card);
+      border-radius: var(--br); overflow:hidden;
+      display:flex; flex-direction:column;
+    }
+    .thumb{width:100%;aspect-ratio:16/9;object-fit:cover;background:#1b1b28;display:block}
+    .pad{padding:10px 11px}
+    .ctitle{font-weight:800;line-height:1.25;letter-spacing:.2px}
+    .meta{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;color:var(--mut);font-size:12px}
     .err{margin-top:12px;color:#ff8a8a}
-    .meta{color:var(--mut);font-size:12px;margin-top:10px}
+
+    footer{
+      margin-top:18px;padding-top:14px;border-top:var(--bd);
+      color:var(--mut);font-size:12px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="top">
-      <a href="/">← Kembali</a>
-      <a href="/admin.html">Admin</a>
+  <!-- header -->
+  <div class="header">
+    <div class="bar">
+      <a class="brand" href="/" aria-label="Home">
+        <div class="logo" aria-hidden="true"></div>
+        <div class="titlebar">Narahentai</div>
+      </a>
+
+      <div class="right">
+        <a class="iconbtn" href="/" title="Back" aria-label="Back">
+          <!-- back arrow -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <a class="adminbtn" href="/admin.html">Admin</a>
+      </div>
     </div>
+  </div>
 
-    <h1 class="title" id="t">Loading…</h1>
-    <p class="desc" id="d"></p>
-
+  <div class="wrap">
+    <!-- video -->
     <div class="player">
       <video id="v" controls playsinline preload="metadata"></video>
     </div>
 
-    <div class="meta" id="m"></div>
-    <div class="err" id="e"></div>
+    <!-- info -->
+    <div class="content">
+      <h1 id="t">Loading…</h1>
+      <div class="subline" id="sub">
+        <span class="pill">Views: -</span>
+        <span class="pill">Publish: -</span>
+        <span class="pill">Durasi: - menit</span>
+      </div>
+      <div class="desc" id="d"></div>
+      <div class="err" id="e"></div>
+    </div>
+
+    <!-- rekomendasi -->
+    <div class="sectionTitle">Rekomendasi lainnya</div>
+    <div class="grid" id="rec"></div>
+
+    <footer>
+      <div>© <span id="year"></span> Narahentai</div>
+      <div>Built on Cloudflare Pages • Lightweight UI</div>
+    </footer>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
     function fail(msg){ document.getElementById("e").textContent = msg; }
+    function esc(s){return (s||"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
     function fmt(iso){ try{return new Date(iso).toLocaleString("id-ID");}catch{return "";}}
 
-    async function main(){
-      const url = new URL(location.href);
-      const slug = url.searchParams.get("slug");
-      if (!slug) return fail("Missing slug.");
+    async function loadPost(slug){
+      const res = await fetch("/api/post?slug=" + encodeURIComponent(slug), { cache:"no-store" });
+      if (!res.ok) throw new Error("Video tidak ditemukan / belum dipublish.");
+      return res.json();
+    }
 
-      const res = await fetch("/api/post?slug=" + encodeURIComponent(slug), { cache: "no-store" });
-      if (!res.ok) return fail("Video tidak ditemukan / belum dipublish.");
+    function renderMeta(p, viewsOverride){
+      const views = (viewsOverride ?? p.views ?? 0);
+      const publish = fmt(p.published_at || p.created_at);
+      const dur = (p.duration_minutes || 0);
+      document.getElementById("sub").innerHTML = `
+        <span class="pill">Views: ${views}</span>
+        <span class="pill">Publish: ${esc(publish)}</span>
+        <span class="pill">Durasi: ${dur} menit</span>
+      `;
+    }
 
-      const p = await res.json();
-      document.getElementById("t").textContent = p.title || "Untitled";
-      document.getElementById("d").textContent = p.description || "";
-      document.getElementById("m").textContent = "Published: " + fmt(p.published_at || p.created_at);
-
+    function playVideo(url){
       const video = document.getElementById("v");
-      const src = p.video_url;
-
-      if (!src) return fail("video_url kosong.");
-      const isHls = /\.m3u8(\?|#|$)/i.test(src);
+      const isHls = /\.m3u8(\?|#|$)/i.test(url);
 
       if (isHls) {
         if (video.canPlayType("application/vnd.apple.mpegurl")) {
-          video.src = src; // Safari
+          video.src = url; // Safari native HLS
         } else if (window.Hls && Hls.isSupported()) {
           const hls = new Hls({ enableWorker: true });
-          hls.loadSource(src);
+          hls.loadSource(url);
           hls.attachMedia(video);
         } else {
-          return fail("Browser tidak support HLS (.m3u8).");
+          fail("Browser tidak support HLS (.m3u8).");
         }
       } else {
-        video.src = src; // mp4, dll
+        video.src = url; // mp4 dll
       }
     }
+
+    async function bumpView(slug, p){
+      // “ori views”: nambah di DB tiap halaman dibuka
+      try {
+        const r = await fetch("/api/view?slug=" + encodeURIComponent(slug), { method:"POST" });
+        if (!r.ok) return;
+        const x = await r.json();
+        if (x && x.ok) renderMeta(p, x.views);
+      } catch {}
+    }
+
+    async function loadRecs(currentSlug){
+      const recEl = document.getElementById("rec");
+      recEl.innerHTML = `<div style="grid-column:1/-1;color:var(--mut);padding:10px 2px">Loading…</div>`;
+
+      // ambil 10 terbaru page 1, lalu filter currentSlug, ambil max 6
+      const res = await fetch("/api/posts?page=1&q=", { cache:"no-store" });
+      if (!res.ok) { recEl.innerHTML = ""; return; }
+      const data = await res.json();
+      const items = (data.items || []).filter(x => x.slug !== currentSlug).slice(0, 6);
+
+      if (!items.length){
+        recEl.innerHTML = `<div style="grid-column:1/-1;color:var(--mut);padding:10px 2px">Belum ada rekomendasi.</div>`;
+        return;
+      }
+
+      recEl.innerHTML = items.map(p => `
+        <a class="card" href="/watch.html?slug=${encodeURIComponent(p.slug)}">
+          <img class="thumb" src="${p.thumbnail_url || ""}" alt="">
+          <div class="pad">
+            <div class="ctitle">${esc(p.title)}</div>
+            <div class="meta">
+              <span class="pill">${(p.duration_minutes||0)} menit</span>
+              <span class="pill">${fmt(p.published_at || p.created_at)}</span>
+              <span class="pill">${(p.views||0)} views</span>
+            </div>
+          </div>
+        </a>
+      `).join("");
+    }
+
+    async function main(){
+      const u = new URL(location.href);
+      const slug = u.searchParams.get("slug");
+      if (!slug) return fail("Missing slug.");
+
+      try {
+        const p = await loadPost(slug);
+        document.title = (p.title ? (p.title + " • ") : "") + "Narahentai";
+        document.getElementById("t").textContent = p.title || "Untitled";
+        document.getElementById("d").textContent = p.description || "";
+        renderMeta(p);
+
+        if (!p.video_url) return fail("video_url kosong.");
+        playVideo(p.video_url);
+
+        bumpView(slug, p);       // views ori
+        loadRecs(slug);          // rekomendasi
+      } catch (e) {
+        fail(e.message || String(e));
+      }
+    }
+
     main();
   </script>
 </body>
