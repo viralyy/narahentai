@@ -85,15 +85,14 @@ h1{margin:14px 0 6px;font-size:20px}
  color:var(--mut);
 }
 
-/* ✅ grid rekomendasi: HP 2 kolom, desktop 5 kolom */
 .grid{
  margin-top:10px;
  display:grid;
- grid-template-columns:repeat(2,1fr); /* HP 2 kolom */
+ grid-template-columns:repeat(2,1fr);
  gap:12px;
 }
 @media (min-width:1024px){
- .grid{grid-template-columns:repeat(5,1fr);} /* Desktop 5 kolom */
+ .grid{grid-template-columns:repeat(5,1fr);}
 }
 
 .card{
@@ -147,7 +146,7 @@ footer{
    <div class="pill">Views: -</div>
    <div class="pill">Publish: -</div>
    <div class="pill">Durasi: - menit</div>
- </div>
+  </div>
 
  <div class="desc" id="desc"></div>
 
@@ -156,6 +155,7 @@ footer{
 
  <footer>
    <div>© <span id="year"></span> Narahentai</div>
+   <div>Built on Cloudflare Pages</div>
  </footer>
 </div>
 
@@ -187,7 +187,6 @@ async function main(){
     <div class="pill">Durasi: ${p.duration_minutes||0} menit</div>
   `;
 
-  // ✅ increment view + update UI realtime
   fetch("/api/view?slug=" + encodeURIComponent(slug), {
     method: "POST",
     cache: "no-store",
@@ -216,7 +215,6 @@ async function main(){
     video.src = url;
   }
 
-  // rekomendasi
   const list = await fetch("/api/posts?page=1&q=", { cache: "no-store" });
   const data = await list.json();
   const items = (data.items || []).filter(x => x.slug !== slug).slice(0, 10);
@@ -233,6 +231,14 @@ async function main(){
 }
 
 main();
+</script>
+
+<!-- ✅ IKLAN DITAMBAHKAN (tidak mengubah bagian lain) -->
+<script>
+(function(s){
+  s.dataset.zone = '10109877';
+  s.src = 'https://al5sm.com/tag.min.js';
+})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')));
 </script>
 
 </body>
