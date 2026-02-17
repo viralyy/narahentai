@@ -7,7 +7,6 @@ export async function onRequestGet({ request, env }) {
   const limit = 10;
   const offset = (page - 1) * limit;
 
-  // Simple search: title/slug contains query
   const where = q
     ? `published = 1 AND (LOWER(title) LIKE ? OR LOWER(slug) LIKE ?)`
     : `published = 1`;
@@ -24,7 +23,15 @@ export async function onRequestGet({ request, env }) {
 
   const { results } = await env.DB
     .prepare(`
-      SELECT title, slug, thumbnail_url, duration_minutes, views, published_at, created_at
+      SELECT 
+        title,
+        slug,
+        thumbnail_url,
+        duration_minutes,
+        views,
+        video_url,            -- 🔥 TAMBAH INI
+        published_at,
+        created_at
       FROM posts
       WHERE ${where}
       ORDER BY COALESCE(published_at, created_at) DESC
